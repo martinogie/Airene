@@ -14,16 +14,21 @@ except ImportError:
 
 load_dotenv()
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Get API key and secret key from environment variables
+API_SECRET_KEY = os.getenv('OPENAI_API_SECRET_KEY')
+
 openai = OpenAI(
-    api_key=os.getenv('OPENAI_API_SECRET_KEY')
+    api_key=API_SECRET_KEY
 )
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # Session management
-SECRET_KEY = os.getenv('SECRET_KEY')  # Get the secret key from the .env file
+SECRET_KEY = API_SECRET_KEY  # Use the API secret key for session management as well
 SESSION_EXPIRATION_HOURS = 2  # Session expiration time in hours
 serializer = URLSafeTimedSerializer(SECRET_KEY)
 # Store chat history in memory (you can use a database or Redis for persistence)
