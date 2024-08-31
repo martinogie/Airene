@@ -12,8 +12,6 @@ try:
 except ImportError:
     from typing_extensions import Annotated
 
-load_dotenv()
-
 # Load environment variables from .env file
 load_dotenv()
 
