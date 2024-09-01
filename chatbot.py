@@ -61,10 +61,7 @@ def get_chat_log(session_id: str) -> List[Dict[str, str]]:
     if session_id not in user_sessions:
         user_sessions[session_id] = {
             "chat_log": [{'role': 'system',
-                          'content': 'You are an Energy Efficiency AI Assistant, completely dedicated to answering questions \
-                          on how people can maximize their energy by asking them questions on their home energy consumption and \
-                          and carrying out energy audit calculations. Also, help give users trusted advise and recommendation on \
-                          various practices that can help reduce their overall energy consumpton.'
+                          'content': 'You are an Energy Efficiency AI Assistant. Your sole purpose is to help users maximize their energy efficiency by asking about their home energy consumption, performing energy audit calculations, and providing trusted advice and recommendations on energy-saving practices. Do not respond to or engage in topics outside of energy efficiency.'
                          }],
             "expires_at": datetime.utcnow() + timedelta(hours=SESSION_EXPIRATION_HOURS)
         }
@@ -77,6 +74,11 @@ def cleanup_expired_sessions():
                         if session_data["expires_at"] < now]
     for session_id in expired_sessions:
         del user_sessions[session_id]
+
+# Simple filter to ensure the AI response is related to energy efficiency
+def is_energy_related(response: str) -> bool:
+    energy_keywords = ['energy', 'efficiency', 'consumption', 'audit', 'savings', 'electricity', 'renewable', 'home']
+    return any(keyword in response.lower() for keyword in energy_keywords)
 
 @app.get("/", response_class=HTMLResponse)
 async def chat_page(request: Request):
@@ -95,7 +97,6 @@ async def chat(websocket: WebSocket):
     session_id = websocket.cookies.get("session_id")
     chat_log = get_chat_log(session_id)
     
-    # Filter out 'system' messages before sending to the client
     filtered_chat_log = [msg for msg in chat_log if msg['role'] != 'system']
     
     while True:
@@ -115,7 +116,12 @@ async def chat(websocket: WebSocket):
                 if chunk.choices[0].delta.content is not None:
                     ai_response += chunk.choices[0].delta.content
                     await websocket.send_text(chunk.choices[0].delta.content)
-            filtered_chat_log.append({'role': 'assistant', 'content': ai_response})
+            
+            # Ensure the response is energy-related
+            if is_energy_related(ai_response):
+                filtered_chat_log.append({'role': 'assistant', 'content': ai_response})
+            else:
+                filtered_chat_log.append({'role': 'assistant', 'content': 'Let’s focus on energy efficiency topics. How can I assist with your energy-related questions?'})
         
         except Exception as e:
             await websocket.send_text(f'Error: {str(e)}')
@@ -136,9 +142,13 @@ async def chat(request: Request, user_input: Annotated[str, Form()]):
     )
     
     bot_response = response.choices[0].message.content
-    chat_log.append({'role': 'assistant', 'content': bot_response})
     
-    # Filter out 'system' messages before passing to the template
+    # Ensure the response is energy-related
+    if is_energy_related(bot_response):
+        chat_log.append({'role': 'assistant', 'content': bot_response})
+    else:
+        chat_log.append({'role': 'assistant', 'content': 'Let’s focus on energy efficiency topics. How can I assist with your energy-related questions?'})
+    
     filtered_chat_log = [msg for msg in chat_log if msg['role'] != 'system']
     
     return templates.TemplateResponse("home.html", {"request": request, "chat_responses": filtered_chat_log})
