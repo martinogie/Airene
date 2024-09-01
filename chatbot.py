@@ -121,7 +121,7 @@ async def chat(websocket: WebSocket):
             if is_energy_related(ai_response):
                 filtered_chat_log.append({'role': 'assistant', 'content': ai_response})
             else:
-                await websocket.send_text("Let’s focus on energy efficiency topics. How can I assist with your energy-related questions?")
+                await websocket.send_text("How can I assist with your energy-related questions today?")
         
         except Exception as e:
             await websocket.send_text(f'Error: {str(e)}')
