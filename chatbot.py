@@ -60,9 +60,12 @@ async def add_session_id(request: Request, call_next):
 def get_chat_log(session_id: str) -> List[Dict[str, str]]:
     if session_id not in user_sessions:
         user_sessions[session_id] = {
-            "chat_log": [{'role': 'system',
-                          'content': 'You are an Energy Efficiency AI Assistant. Your sole purpose is to help users maximize their energy efficiency by asking about their home energy consumption, performing energy audit calculations, and providing trusted advice and recommendations on energy-saving practices. Do not respond to or engage in topics outside of energy efficiency.'
-                         }],
+            chat_log = [{'role': 'system',
+             'content': 'You are an Energy Efficiency AI Assistant, completely dedicated to answering questions \
+             on how people can maximize their energy by asking them questions on their home energy consumption and \
+             and carrying out energy audit calculations. Also, help give users trusted advise and recommendation on \
+             various practices that can help reduce their overall energy consumpton.'
+            }],
             "expires_at": datetime.utcnow() + timedelta(hours=SESSION_EXPIRATION_HOURS)
         }
     return user_sessions[session_id]["chat_log"]
