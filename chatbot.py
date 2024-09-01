@@ -77,7 +77,7 @@ def cleanup_expired_sessions():
 
 # Simple filter to ensure the AI response is related to energy efficiency
 def is_energy_related(response: str) -> bool:
-    energy_keywords = ['energy', 'efficiency', 'consumption', 'audit', 'savings', 'electricity', 'renewable', 'home']
+    energy_keywords = ['energy', 'efficiency', 'consumption', 'audit', 'savings', 'electricity', 'renewable', 'home', 'solar', 'power', 'insulation', 'hvac']
     return any(keyword in response.lower() for keyword in energy_keywords)
 
 @app.get("/", response_class=HTMLResponse)
@@ -121,7 +121,7 @@ async def chat(websocket: WebSocket):
             if is_energy_related(ai_response):
                 filtered_chat_log.append({'role': 'assistant', 'content': ai_response})
             else:
-                filtered_chat_log.append({'role': 'assistant', 'content': 'Let’s focus on energy efficiency topics. How can I assist with your energy-related questions?'})
+                await websocket.send_text("Let’s focus on energy efficiency topics. How can I assist with your energy-related questions?")
         
         except Exception as e:
             await websocket.send_text(f'Error: {str(e)}')
